@@ -67,7 +67,7 @@ from transformers import (
     set_seed,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
-from trl import SFTTrainer, SFTConfig
+from trl import SFTTrainer
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -329,7 +329,7 @@ def train():
         logger.info(f"All training samples fit within max_seq_length={max_seq_length}")
 
     # ---- Training arguments ----
-    training_args = SFTConfig(
+    training_args = TrainingArguments(
         output_dir=str(output_dir),
         num_train_epochs=cfg.get("num_train_epochs", 3),
         per_device_train_batch_size=cfg.get("per_device_train_batch_size", 2),
@@ -356,10 +356,6 @@ def train():
         greater_is_better=cfg.get("greater_is_better", False),
         report_to=cfg.get("report_to", "none"),
         seed=seed,
-        max_seq_length=max_seq_length,
-        dataset_text_field="text",
-        packing=False,
-        neftune_noise_alpha=5.0,
     )
 
     # ---- Callbacks ----
@@ -375,6 +371,9 @@ def train():
             eval_dataset=val_dataset,
             processing_class=tokenizer,
             callbacks=callbacks,
+            max_seq_length=max_seq_length,
+            dataset_text_field="text",
+            packing=False,
         )
     except Exception as e:
         logger.error(f"Failed to initialize trainer: {e}")
