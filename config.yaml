@@ -1,0 +1,57 @@
+# ============================================================
+# MinFix LoRA Training Configuration
+# Qwen2.5-1.5B-Instruct fine-tuning for code repair
+# ============================================================
+
+# --- Model ---
+model_name: "Qwen/Qwen2.5-1.5B-Instruct"
+dtype: "bfloat16"            # bfloat16 (ampere+) or float16 (older GPUs)
+load_in_4bit: false           # set true for VRAM <16GB (uses QLoRA)
+
+# --- Dataset ---
+train_data: "../data/v3/final/sft/train.jsonl"
+val_data: "../data/v3/final/sft/validation.jsonl"
+max_seq_length: 2048          # increase if diffs are long (costs VRAM)
+
+# --- LoRA ---
+lora_r: 64                    # rank (higher = more capacity, more VRAM)
+lora_alpha: 128               # 2x rank is a good default
+lora_dropout: 0.05
+lora_target_modules:          # target all attention + MLP layers
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# --- Training ---
+num_train_epochs: 3
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
+gradient_accumulation_steps: 8  # effective batch = 2 * 8 = 16
+learning_rate: 2.0e-5
+lr_scheduler_type: "cosine"
+warmup_ratio: 0.1
+weight_decay: 0.01
+max_grad_norm: 1.0
+fp16: false
+bf16: true                     # must match dtype above
+optim: "adamw_torch"
+gradient_checkpointing: true   # saves VRAM, slight speed cost
+logging_steps: 10
+eval_strategy: "steps"
+eval_steps: 50
+save_strategy: "steps"
+save_steps: 100
+save_total_limit: 3
+load_best_model_at_end: true
+metric_for_best_model: "eval_loss"
+greater_is_better: false
+report_to: "none"              # change to "wandb" if you use W&B
+seed: 42
+
+# --- Output ---
+output_dir: "./output"
+resume_from_checkpoint: null    # set to checkpoint path to resume
