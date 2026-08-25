@@ -6,7 +6,7 @@
 # --- Model ---
 model_name: "Qwen/Qwen2.5-1.5B-Instruct"
 dtype: "bfloat16"            # bfloat16 (ampere+) or float16 (older GPUs)
-load_in_4bit: false           # set true for VRAM <16GB (uses QLoRA)
+load_in_4bit: true            # set false for VRAM >=20GB
 
 # --- Dataset ---
 train_data: "../data/v3/final/sft/train.jsonl"

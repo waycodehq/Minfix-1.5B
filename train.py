@@ -67,7 +67,7 @@ from transformers import (
     set_seed,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
-from trl import SFTTrainer, SFTConfig, DataCollatorForCompletionOnlyLM
+from trl import SFTTrainer, SFTConfig
 
 # ---------------------------------------------------------------------------
 # Logging
