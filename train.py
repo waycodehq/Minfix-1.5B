@@ -337,7 +337,7 @@ def train():
         gradient_accumulation_steps=cfg.get("gradient_accumulation_steps", 8),
         learning_rate=cfg.get("learning_rate", 2e-5),
         lr_scheduler_type=cfg.get("lr_scheduler_type", "cosine"),
-        warmup_ratio=cfg.get("warmup_ratio", 0.1),
+        warmup_steps=cfg.get("warmup_steps", 100),
         weight_decay=cfg.get("weight_decay", 0.01),
         max_grad_norm=cfg.get("max_grad_norm", 1.0),
         fp16=cfg.get("fp16", False),
