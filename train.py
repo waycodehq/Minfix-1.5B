@@ -254,7 +254,7 @@ def train():
     logger.info(f"Loading model: {model_name}")
     model_kwargs = {
         "trust_remote_code": True,
-        "torch_dtype": torch.bfloat16 if cfg.get("bf16", True) else torch.float16,
+        "dtype": torch.bfloat16 if cfg.get("bf16", True) else torch.float16,
         "device_map": "auto",
     }
     if bnb_config is not None:

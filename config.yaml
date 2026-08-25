@@ -9,8 +9,8 @@ dtype: "bfloat16"            # bfloat16 (ampere+) or float16 (older GPUs)
 load_in_4bit: true            # set false for VRAM >=20GB
 
 # --- Dataset ---
-train_data: "../data/v3/final/sft/train.jsonl"
-val_data: "../data/v3/final/sft/validation.jsonl"
+train_data: "train.jsonl"
+val_data: "validation.jsonl"
 max_seq_length: 2048          # increase if diffs are long (costs VRAM)
 
 # --- LoRA ---
