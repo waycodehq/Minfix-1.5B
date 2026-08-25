@@ -62,11 +62,12 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
+    Trainer,
+    DataCollatorForLanguageModeling,
     TrainerCallback,
     set_seed,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
-from trl import SFTTrainer
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -343,15 +344,21 @@ def train():
     # ---- Callbacks ----
     callbacks = [SafetyCallback()]
 
+    # ---- Data collator ----
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=False,
+    )
+
     # ---- Trainer ----
-    logger.info("Initializing SFTTrainer...")
+    logger.info("Initializing Trainer...")
     try:
-        trainer = SFTTrainer(
+        trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
-            tokenizer=tokenizer,
+            data_collator=data_collator,
             callbacks=callbacks,
         )
     except Exception as e:
