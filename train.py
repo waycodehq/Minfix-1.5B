@@ -10,7 +10,6 @@ import sys
 import json
 import yaml
 import logging
-import signal
 import traceback
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -179,26 +178,13 @@ def format_chat(example, tokenizer, max_length=2048):
 # Custom callback for graceful shutdown & monitoring
 # ---------------------------------------------------------------------------
 class SafetyCallback(TrainerCallback):
-    """Logs VRAM usage and handles graceful Ctrl+C."""
-
-    def __init__(self):
-        self.interrupted = False
-        signal.signal(signal.SIGINT, self._handle_sigint)
-
-    def _handle_sigint(self, signum, frame):
-        logger.info("\n[INFO] Ctrl+C received. Will save checkpoint and exit after current step...")
-        self.interrupted = True
+    """Logs VRAM usage during training."""
 
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs and torch.cuda.is_available():
             allocated = torch.cuda.memory_allocated() / (1024**3)
             reserved = torch.cuda.memory_reserved() / (1024**3)
             logger.info(f"[VRAM] Allocated: {allocated:.2f} GB | Reserved: {reserved:.2f} GB")
-
-    def on_step_end(self, args, state, control, **kwargs):
-        if self.interrupted:
-            control.should_training_stop = True
-            logger.info("[INFO] Stopping training gracefully. Checkpoint will be saved.")
 
     def on_evaluate(self, args, state, control, metrics=None, **kwargs):
         if metrics:
