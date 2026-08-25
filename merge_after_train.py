@@ -37,7 +37,7 @@ def merge():
     print(f"[1/4] Loading base model: {base_model_name}")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         device_map="cpu",
         trust_remote_code=True,
     )
