@@ -160,14 +160,20 @@ def load_and_validate_data(path: str, split: str) -> Dataset:
 # ---------------------------------------------------------------------------
 # Chat template formatting
 # ---------------------------------------------------------------------------
-def format_chat(example, tokenizer):
-    """Apply chat template to messages. Returns dict with 'text' key."""
+def format_chat(example, tokenizer, max_length=2048):
+    """Apply chat template, tokenize, and truncate. Returns dict with 'input_ids' and 'attention_mask'."""
     text = tokenizer.apply_chat_template(
         example["messages"],
         tokenize=False,
         add_generation_prompt=False,
     )
-    return {"text": text}
+    tokenized = tokenizer(
+        text,
+        truncation=True,
+        max_length=max_length,
+        padding=False,
+    )
+    return tokenized
 
 # ---------------------------------------------------------------------------
 # Custom callback for graceful shutdown & monitoring
@@ -301,32 +307,22 @@ def train():
 
     max_seq_length = cfg.get("max_seq_length", 2048)
 
-    # Apply chat template
-    logger.info("Applying chat template to datasets...")
+    # Apply chat template + tokenize + truncate
+    logger.info("Tokenizing and truncating datasets...")
     train_dataset = train_dataset.map(
-        lambda ex: format_chat(ex, tokenizer),
+        lambda ex: format_chat(ex, tokenizer, max_seq_length),
         num_proc=1,
         desc="Formatting train",
+        remove_columns=train_dataset.column_names,
     )
     val_dataset = val_dataset.map(
-        lambda ex: format_chat(ex, tokenizer),
+        lambda ex: format_chat(ex, tokenizer, max_seq_length),
         num_proc=1,
         desc="Formatting val",
+        remove_columns=val_dataset.column_names,
     )
 
-    # Quick token length check
-    logger.info("Checking token lengths...")
-    too_long = 0
-    for sample in train_dataset:
-        token_count = len(tokenizer.encode(sample["text"], add_special_tokens=False))
-        if token_count > max_seq_length:
-            too_long += 1
-    if too_long > 0:
-        pct = 100 * too_long / len(train_dataset)
-        logger.warning(f"{too_long} training samples ({pct:.1f}%) exceed max_seq_length={max_seq_length}")
-        logger.warning("These will be truncated. Consider increasing max_seq_length in config.yaml")
-    else:
-        logger.info(f"All training samples fit within max_seq_length={max_seq_length}")
+    logger.info(f"Tokenized {len(train_dataset)} train, {len(val_dataset)} val samples (max_length={max_seq_length})")
 
     # ---- Training arguments ----
     training_args = TrainingArguments(
@@ -371,9 +367,6 @@ def train():
             eval_dataset=val_dataset,
             processing_class=tokenizer,
             callbacks=callbacks,
-            max_seq_length=max_seq_length,
-            dataset_text_field="text",
-            packing=False,
         )
     except Exception as e:
         logger.error(f"Failed to initialize trainer: {e}")
