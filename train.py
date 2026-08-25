@@ -45,7 +45,8 @@ def preflight():
         print("\n[ERROR] No CUDA GPU detected. Training requires a GPU.")
         sys.exit(1)
 
-    vram_gb = torch.cuda.get_device_properties(0).total_mem / (1024**3)
+    _props = torch.cuda.get_device_properties(0)
+    vram_gb = getattr(_props, 'total_memory', getattr(_props, 'total_mem', 0)) / (1024**3)
     print(f"[INFO] GPU: {torch.cuda.get_device_name(0)} ({vram_gb:.1f} GB VRAM)")
     if vram_gb < 12:
         print("[WARN] GPU has <12 GB VRAM. Consider enabling load_in_4bit in config.yaml")
